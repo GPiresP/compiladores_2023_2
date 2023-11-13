@@ -6,7 +6,7 @@ JOÃO DAVI M NUNES - 00285639
 %option noyywrap
 %option yylineno
 %{
-	#include "tokens.h"
+	#include "parser.tab.h"
 %}
 
 %%
