@@ -1,0 +1,9 @@
+// TESTE DE PRECEDENCIA
+
+( int teste1, float teste2, bool teste3 ) >= float ! main
+{
+    float aux;
+    aux = 1+2/2;
+
+    return aux;
+}

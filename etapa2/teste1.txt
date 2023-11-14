@@ -1,0 +1,3 @@
+// TESTE DE VARIÁVEIS GLOBAIS
+
+int teste, float teste2, bool teste3;

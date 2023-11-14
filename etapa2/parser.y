@@ -115,7 +115,7 @@ variaveis_locais:
         ;
 
 atribuicao:
-        TK_IDENTIFICADOR TK_OC_EQ expressao
+        TK_IDENTIFICADOR '=' expressao
         ;
 
 chamada_funcao:

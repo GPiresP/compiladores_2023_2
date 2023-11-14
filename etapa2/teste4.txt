@@ -1,0 +1,15 @@
+// TESTE DE DECLARACAO DE FUNCAO
+// controle de fluxo 1
+
+( int teste1, float teste2, bool teste3 ) >= float ! main
+{
+    float aux;
+    
+    if ( 1+2 == 2 ) {
+        aux = 2.3;
+    } else {
+        aux = 2;
+    }
+
+    return aux;
+}

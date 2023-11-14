@@ -1,0 +1,8 @@
+// TESTE DE DECLARACAO DE FUNCAO
+
+( int teste1, float teste2, bool teste3 ) >= float ! main
+{
+    float aux;
+    aux = 1+2;
+    return aux;
+}

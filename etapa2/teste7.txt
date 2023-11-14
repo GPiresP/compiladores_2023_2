@@ -1,0 +1,9 @@
+// TESTE DE PRECEDENCIA
+
+( int teste1, float teste2, bool teste3 ) >= bool ! main
+{
+    bool aux;
+    aux = -1+2/2 >= 4+8%2 | (23*12)%2;
+
+    return aux;
+}
