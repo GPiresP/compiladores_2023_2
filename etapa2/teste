@@ -1,0 +1,32 @@
+//TESTE VARIAVEL GLOBAL E ORDEM VARIAVEL FUNCAO
+int foo;
+(int foo, bool bar) >= bool ! foo{}
+bool foo, bar, bar, _foo;
+
+//TESTE COMANDOS
+() >= float ! foo{
+//TESTE VAR LOCAL
+int bar, foo, bar, foo;
+
+//TESTE ATRIBUICAO
+foo == foo+bar;
+
+//TESTE FUNCAO
+foo(bar, foo, bar, foo*bar, bar, foo/bar, foo);
+
+
+//TESTE RETORNO
+return !bar;
+
+//TESTE IF
+if(foo*bar*(-bar)){};
+
+//TESTE IF ELSE
+if(foo<=bar-(foo>=bar)){}
+else{};
+
+//TESTE WHILE
+while((foo & bar)|(bar & foo))
+{};
+
+}

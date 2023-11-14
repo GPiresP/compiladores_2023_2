@@ -32,94 +32,194 @@ void yyerror (char const *mensagem);
 
 %%
 
-programa: declaracoes funcoes
-        | funcoes declaracoes
-        | declaracoes
-        | funcoes
-        |
+programa:
+        declaracoes
+        | %empty
         ;
 
-declaracoes: vars_glob
+declaracoes:
+        declaracoes declaracao
+        | declaracao
         ;
 
-vars_glob: tipo lista_vars_global ';'
+declaracao:
+        funcao
+        | variaveis_globais
         ;
 
-lista_vars_global: TK_IDENTIFICADOR
-                | lista_vars_global ',' TK_IDENTIFICADOR
-                ;
-
-funcoes: funcao
-        | funcoes funcao
+variaveis_globais:
+        tipo identificadores ';'
         ;
 
-funcao: cabecalho corpo
+identificadores:
+        identificadores ',' TK_IDENTIFICADOR
+        | TK_IDENTIFICADOR
         ;
 
-cabecalho: '(' lista_params ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR 
+tipo:
+        TK_PR_INT
+        | TK_PR_FLOAT
+        | TK_PR_BOOL
         ;
 
-lista_params: lista_params ',' tipo TK_IDENTIFICADOR
-            | tipo TK_IDENTIFICADOR
-            |
-            ;
-
-corpo: bloco_cmd
+funcao:
+        cabecalho corpo
         ;
 
-bloco_cmd: '{' lista_cmd_simples '}'
-            | '{' '}'
-            ;
-
-lista_cmd_simples: lista_cmd_simples cmd ';'
-                | cmd ';'
-                ;
-
-cmd: decl_var_local
-    | atrib
-    | cont_fluxo_controle
-    | op_ret
-    | bloco_cmd
-    | call_func
-    ;
-
-decl_var_local: tipo lista_var_local
-                ;
-
-lista_var_local: lista_var_local ',' TK_IDENTIFICADOR
-                | TK_IDENTIFICADOR
-                ;
-
-atrib: TK_IDENTIFICADOR '=' expressao
+cabecalho:
+        '(' lista_parametros ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR
         ;
 
-cont_fluxo_controle: condicional
-                    | iterativa
-                    ;
-
-condicional: TK_PR_IF '(' expressao ')' bloco_cmd 
-            | TK_PR_IF '(' expressao ')' bloco_cmd TK_PR_ELSE bloco_cmd
-            ;
-
-iterativa: TK_PR_WHILE '(' expressao ')' bloco_cmd
-            ;
-
-op_ret: TK_PR_RETURN expressao
+lista_parametros:
+        parametros 
+        | %empty
         ;
 
-call_func: TK_IDENTIFICADOR '(' lista_args ')'
-        | TK_IDENTIFICADOR '(' ')'
+parametros:
+        parametros ',' parametro
+        | parametro
         ;
 
-lista_args: lista_args ',' expressao
-        | expressao
+parametro:
+        tipo TK_IDENTIFICADOR
         ;
 
-expressao: 
+corpo:
+        bloco_comandos
+        ;
 
-tipo: TK_PR_INT 
-    | TK_PR_FLOAT
-    | TK_PR_BOOL
-    ;
+bloco_comandos:
+        '{' lista_comandos '}'
+        ;
+
+lista_comandos:
+        comandos ';'
+        | %empty
+        ;
+
+comandos:
+        comandos ';' comando
+        | comando
+        ;
+
+comando:
+        variaveis_locais
+        | atribuicao
+        | chamada_funcao
+        | retorno
+        | controle_fluxo
+        ;
+
+variaveis_locais:
+        tipo identificadores
+        ;
+
+atribuicao:
+        TK_IDENTIFICADOR TK_OC_EQ expressao
+        ;
+
+chamada_funcao:
+        TK_IDENTIFICADOR '(' lista_argumentos ')'
+        ;
+
+lista_argumentos:
+        argumentos
+        | %empty
+        ;
+
+argumentos:
+        argumentos ',' argumento
+        | argumento
+        ;
+
+argumento:
+        expressao
+        ;
+
+retorno:
+        TK_PR_RETURN expressao
+        ;
+
+controle_fluxo:
+        bloco_if_else
+        | bloco_while
+        ;
+
+bloco_if_else:
+        bloco_if bloco_else
+        ;
+
+bloco_if:
+        TK_PR_IF '(' expressao ')' bloco_comandos
+        ;
+
+bloco_else:
+        TK_PR_ELSE bloco_comandos
+        | %empty
+        ;
+
+bloco_while:
+        TK_PR_WHILE '(' expressao ')' bloco_comandos
+        ;
+
+expressao:
+        operador_unario termo_classe_0
+        | termo_classe_0
+        ;
+
+operador_unario:
+        '-'
+        | '!'
+        ;
+
+termo_classe_0:
+        termo_classe_0 TK_OC_OR termo_classe_1
+        | termo_classe_1
+        ;
+
+termo_classe_1:
+        termo_classe_1 TK_OC_AND termo_classe_2
+        | termo_classe_2
+        ;
+
+termo_classe_2:
+        termo_classe_2 TK_OC_EQ termo_classe_3
+        termo_classe_2 TK_OC_NE termo_classe_3
+        | termo_classe_3
+        ;
+
+termo_classe_3:
+        termo_classe_3 '<' termo_classe_4
+        | termo_classe_3 '>' termo_classe_4
+        | termo_classe_3 TK_OC_LE termo_classe_4
+        | termo_classe_3 TK_OC_GE termo_classe_4
+        | termo_classe_4
+        ;
+
+termo_classe_4:
+        termo_classe_4 '+' termo_classe_5
+        | termo_classe_4 '-' termo_classe_5
+        | termo_classe_5
+        ;
+
+termo_classe_5:
+        termo_classe_5 '*' termo_classe_6
+        | termo_classe_5 '/' termo_classe_6
+        | termo_classe_5 '%' termo_classe_6
+        | termo_classe_6
+        ;
+
+termo_classe_6:
+        '(' expressao ')'
+        | operando
+        ;
+
+operando:
+        TK_IDENTIFICADOR
+        | TK_LIT_FALSE
+        | TK_LIT_TRUE
+        | TK_LIT_INT
+        | TK_LIT_FLOAT
+        ;
 
 %%
