@@ -108,6 +108,7 @@ comando:
         | chamada_funcao
         | retorno
         | controle_fluxo
+        | bloco_comandos
         ;
 
 variaveis_locais:
