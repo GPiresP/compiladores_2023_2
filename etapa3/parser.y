@@ -4,9 +4,27 @@ GABRIEL PIRES E PEIXOTTO - 00326403
 JOÃO DAVI M NUNES - 00285639
 */
 %{
-int yylex(void);
-void yyerror (char const *mensagem);
+        int yylex(void);
+        void yyerror (char const *mensagem);
+        extern void *arvore;
+        extern void batata();
+        struct dados_token token_anterior;
+        struct dados_token token_novo;
 %}
+
+%code requires {
+        typedef enum {identificador, literal} TIPO_TOKEN_ENUM;
+
+        struct dados_token {
+                int num_linha;
+                TIPO_TOKEN_ENUM tipo_token;
+                char *val_token;
+        };
+}
+
+%union {
+       struct dados_token valor_lexico;
+}
 
 %define parse.error verbose
 
@@ -33,7 +51,7 @@ void yyerror (char const *mensagem);
 %%
 
 programa:
-        declaracoes
+        declaracoes { batata(yylval.valor_lexico); }
         | %empty
         ;
 
@@ -53,7 +71,7 @@ variaveis_globais:
 
 identificadores:
         identificadores ',' TK_IDENTIFICADOR
-        | TK_IDENTIFICADOR
+        | TK_IDENTIFICADOR { batata(yylval.valor_lexico); }
         ;
 
 tipo:
@@ -164,59 +182,89 @@ bloco_while:
         ;
 
 expressao:
-        operador_unario termo_classe_0
-        | termo_classe_0
+        term0
         ;
 
-operador_unario:
-        '-'
-        | '!'
+term0:
+        term0 TK_OC_OR term1
+        | term1
         ;
 
-termo_classe_0:
-        termo_classe_0 TK_OC_OR termo_classe_1
-        | termo_classe_1
+term1:
+        term1 TK_OC_AND term2
+        | term2
         ;
 
-termo_classe_1:
-        termo_classe_1 TK_OC_AND termo_classe_2
-        | termo_classe_2
+term2:
+        term2 TK_OC_EQ term3
+        | term3
         ;
 
-termo_classe_2:
-        termo_classe_2 TK_OC_EQ termo_classe_3
-        termo_classe_2 TK_OC_NE termo_classe_3
-        | termo_classe_3
+
+term3:  
+        term3 TK_OC_NE term4
+        | term4
         ;
 
-termo_classe_3:
-        termo_classe_3 '<' termo_classe_4
-        | termo_classe_3 '>' termo_classe_4
-        | termo_classe_3 TK_OC_LE termo_classe_4
-        | termo_classe_3 TK_OC_GE termo_classe_4
-        | termo_classe_4
+term4:
+        term4 '<' term5
+        | term5
         ;
 
-termo_classe_4:
-        termo_classe_4 '+' termo_classe_5
-        | termo_classe_4 '-' termo_classe_5
-        | termo_classe_5
+term5:  
+        term5 '>' term6
+        | term6
         ;
 
-termo_classe_5:
-        termo_classe_5 '*' termo_classe_6
-        | termo_classe_5 '/' termo_classe_6
-        | termo_classe_5 '%' termo_classe_6
-        | termo_classe_6
+term6:  
+        term6 TK_OC_LE term7
+        | term7
         ;
 
-termo_classe_6:
+term7:  
+        term7 TK_OC_GE term8
+        | term8
+        ;
+
+term8:
+        term8 '+' term9
+        | term9
+        ;
+
+term9:  
+        term9 '-' term10
+        | term10
+        ;
+
+
+term10:
+        term10 '*' term11
+        | term11
+        ;
+
+term11:  
+        term11 '/' term12
+        | term12
+        ;
+
+term12:  
+        term12 '%' term13
+        | term13
+        ;
+
+term13:  
+        '-' term13
+        | '!' term13
+        | term14
+        ;
+
+term14:
         '(' expressao ')'
         | operando
         ;
 
 operando:
-        TK_IDENTIFICADOR
+        TK_IDENTIFICADOR { batata(yylval.valor_lexico); }
         | TK_LIT_FALSE
         | TK_LIT_TRUE
         | TK_LIT_INT
