@@ -20,33 +20,55 @@ JOÃO DAVI M NUNES - 00285639
                 TIPO_TOKEN_ENUM tipo_token;
                 char *val_token;
         };
+
+        struct no_arvore {
+                struct dados_token dados;
+                struct no_arvore *pai;
+                struct no_arvore *filhos[];
+        };
 }
 
 %union {
-       struct dados_token valor_lexico;
+        struct dados_token valor_lexico;
 }
 
 %define parse.error verbose
 
-%token TK_PR_INT
-%token TK_PR_FLOAT
-%token TK_PR_BOOL
-%token TK_PR_IF
-%token TK_PR_ELSE
-%token TK_PR_WHILE
-%token TK_PR_RETURN
-%token TK_OC_LE
-%token TK_OC_GE
-%token TK_OC_EQ
-%token TK_OC_NE
-%token TK_OC_AND
-%token TK_OC_OR
-%token TK_IDENTIFICADOR
-%token TK_LIT_INT
-%token TK_LIT_FLOAT
-%token TK_LIT_FALSE
-%token TK_LIT_TRUE
+%token<valor_lexico> TK_PR_INT
+%token<valor_lexico> TK_PR_FLOAT
+%token<valor_lexico> TK_PR_BOOL
+%token<valor_lexico> TK_PR_IF
+%token<valor_lexico> TK_PR_ELSE
+%token<valor_lexico> TK_PR_WHILE
+%token<valor_lexico> TK_PR_RETURN
+%token<valor_lexico> TK_OC_LE
+%token<valor_lexico> TK_OC_GE
+%token<valor_lexico> TK_OC_EQ
+%token<valor_lexico> TK_OC_NE
+%token<valor_lexico> TK_OC_AND
+%token<valor_lexico> TK_OC_OR
+%token<valor_lexico> TK_IDENTIFICADOR
+%token<valor_lexico> TK_LIT_INT
+%token<valor_lexico> TK_LIT_FLOAT
+%token<valor_lexico> TK_LIT_FALSE
+%token<valor_lexico> TK_LIT_TRUE
 %token TK_ERRO
+
+%type<valor_lexico> programa
+%type<valor_lexico> declaracoes
+%type<valor_lexico> declaracao
+%type<valor_lexico> variaveis_globais
+%type<valor_lexico> identificadores
+%type<valor_lexico> tipo
+%type<valor_lexico> funcao
+%type<valor_lexico> cabecalho
+%type<valor_lexico> lista_parametros
+%type<valor_lexico> parametros
+%type<valor_lexico> parametro
+%type<valor_lexico> corpo
+%type<valor_lexico> bloco_comandos
+
+
 
 %%
 
@@ -75,7 +97,7 @@ identificadores:
         ;
 
 tipo:
-        TK_PR_INT
+        TK_PR_INT { batata($1); }
         | TK_PR_FLOAT
         | TK_PR_BOOL
         ;

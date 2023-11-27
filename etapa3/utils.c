@@ -11,6 +11,12 @@ struct dados_token {
 		char *val_token;
 };
 
+struct no_arvore {
+		struct dados_token dados;
+		struct no_arvore *pai;
+		struct no_arvore *filhos[];
+};
+
 int get_line_number()
 {
 	return yylineno;
@@ -30,4 +36,6 @@ void batata (struct dados_token batata2)
 {
 	printf("AAAAAAAAAAAAAAA\n");	
 	printf("%d\n", batata2.num_linha);
+	printf("%s\n", batata2.val_token);
 }
+
