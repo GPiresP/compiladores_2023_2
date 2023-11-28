@@ -140,75 +140,94 @@ declaracao:
         ;
 
 variaveis_globais:
-        tipo identificadores ';'
+        tipo identificadores ';' { $$ = NULL; }
         ;
 
 identificadores:
-        identificadores ',' TK_IDENTIFICADOR
-        | TK_IDENTIFICADOR 
+        identificadores ',' TK_IDENTIFICADOR { $$ = NULL; }
+        | TK_IDENTIFICADOR { $$ = NULL; }
         ;
 
 tipo:
-        TK_PR_INT
-        | TK_PR_FLOAT
-        | TK_PR_BOOL
+        TK_PR_INT { $$ = NULL; }
+        | TK_PR_FLOAT { $$ = NULL; }
+        | TK_PR_BOOL { $$ = NULL; }
         ;
 
 funcao:
-        cabecalho corpo
+        cabecalho corpo { $$ = $1; if($2 != NULL) { ADICIONAR_FILHO($$, $2); } }
         ;
 
 cabecalho:
-        '(' lista_parametros ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR { $$ = NULL }
+        '(' lista_parametros ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR { $$ = criar_no($7->val_token) }
         ;
 
 lista_parametros:
-        parametros 
+        parametros { $$ = NULL; }
         | %empty { $$ = NULL; }
         ;
 
 parametros:
-        parametros ',' parametro
-        | parametro
+        parametros ',' parametro { $$ = NULL; }
+        | parametro { $$ = NULL; }
         ;
 
 parametro:
-        tipo TK_IDENTIFICADOR
+        tipo TK_IDENTIFICADOR { $$ = NULL; }
         ;
 
 corpo:
-        bloco_comandos
+        bloco_comandos { $$ = $1; }
         ;
 
 bloco_comandos:
-        '{' lista_comandos '}'
+        '{' lista_comandos '}' { $$ = $2; }
         ;
 
 lista_comandos:
-        comandos ';'
+        comandos ';' { //FALTA ESSA PARTE }
         | %empty { $$ = NULL; }
         ;
 
 comandos:
-        comandos ';' comando
-        | comando
+        comandos ';' comando { 
+                                if($1 != NULL) 
+                                        { $$ = $1;
+                                                if($3 != NULL)
+                                                {
+                                                        if (!strcmp($1->label, "if"))
+                                                        {
+                                                                ADICIONAR_FILHO($1, $3);
+                                                        }
+                                                        else {
+                                                                no_arvore *last_node = $1;
+                                                                while(last_node->number_of_children == 3) {
+                                                                        last_node = last_node->children[2];
+                                                                }
+                                                                ADICIONAR_FILHO(last_node, $3);
+                                                        }
+                                                }
+                                        } 
+                                       else if($3 != NULL) {$$ = $3;}
+                                }
+        | comando { $$ = $1; }
         ;
 
 comando:
-        variaveis_locais
-        | atribuicao
-        | chamada_funcao
-        | retorno
-        | controle_fluxo
-        | bloco_comandos
+        variaveis_locais { $$ = $1; }
+        | atribuicao { $$ = $1; }
+        | chamada_funcao { $$ = $1; }
+        | retorno { $$ = $1; }
+        | controle_fluxo { $$ = $1; }
+        | bloco_comandos { $$ = $1; }
         ;
 
 variaveis_locais:
-        tipo identificadores
+        tipo identificadores  { $$ = $2; }
         ;
 
 atribuicao:
-        TK_IDENTIFICADOR '=' expressao
+        TK_IDENTIFICADOR '=' expressao { $$ = criar_no("="); ADICIONAR_FILHO($$, criar_no($1->token_value)); ADICIONAR_FILHO($$, $3); }
         ;
 
 chamada_funcao:
