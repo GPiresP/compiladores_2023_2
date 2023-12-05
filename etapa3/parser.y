@@ -3,38 +3,26 @@ AUTORES:
 GABRIEL PIRES E PEIXOTTO - 00326403
 JOÃO DAVI M NUNES - 00285639
 */
+
 %{
         #include <stddef.h>
-
+        #include <string.h>
+        #include "ast.h"
+        #include "valorlexico.h"
         int yylex(void);
         void yyerror (char const *mensagem);
+        extern int yylineast;
+        extern void *arvore;
 %}
 
 %code requires {
-        struct dados_token {
-                int num_linha;
-                int tipo_token;
-                char *val_token;
-        };
-
-        struct no_arvore {
-                struct dados_token dados;
-                int num_filhos;
-                struct no_arvore *filhos[];
-        };
-
-        extern void *arvore;
-        extern void batata();
-        extern struct no_arvore* criar_folha();
-        extern struct no_arvore* criar_no(struct dados_token dados, int num_filhos, struct no_arvore *filhos[num_filhos]);
-        extern void imprimir_no(struct no_arvore *no);
-
-        struct no_arvore* prev_declaracao;
+        #include "ast.h"
+        #include "valorlexico.h"
 }
 
 %union {
-        struct dados_token valor_lexico;
-        struct no_arvore *no;
+        VL *valor_lexico;
+        AST *ast;
 }
 
 %define parse.error verbose
@@ -74,51 +62,43 @@ JOÃO DAVI M NUNES - 00285639
 %token<valor_lexico> ';'
 %token TK_ERRO
 
-%type<no> programa
-%type<no> declaracoes
-%type<no> declaracao
-%type<no> variaveis_globais
-%type<no> identificadores
-%type<no> tipo
-%type<no> funcao
-%type<no> cabecalho
-%type<no> lista_parametros
-%type<no> parametros
-%type<no> parametro
-%type<no> corpo
-%type<no> bloco_comandos
-%type<no> lista_comandos
-%type<no> comandos
-%type<no> comando
-%type<no> variaveis_locais
-%type<no> atribuicao
-%type<no> chamada_funcao
-%type<no> lista_argumentos
-%type<no> argumentos
-%type<no> argumento
-%type<no> retorno
-%type<no> controle_fluxo
-%type<no> bloco_if_else
-%type<no> bloco_if
-%type<no> bloco_else
-%type<no> bloco_while
-%type<no> expressao
-%type<no> term0
-%type<no> term1
-%type<no> term2
-%type<no> term3
-%type<no> term4
-%type<no> term5
-%type<no> term6
-%type<no> term7
-%type<no> term8
-%type<no> term9
-%type<no> term10
-%type<no> term11
-%type<no> term12
-%type<no> term13
-%type<no> term14
-%type<no> operando
+%type<ast> programa
+%type<ast> declaracoes
+%type<ast> declaracao
+%type<ast> variaveis_globais
+%type<ast> identificadores
+%type<ast> tipo
+%type<ast> funcao
+%type<ast> cabecalho
+%type<ast> lista_parametros
+%type<ast> parametros
+%type<ast> parametro
+%type<ast> corpo
+%type<ast> bloco_comandos
+%type<ast> comandos
+%type<ast> comando
+%type<ast> variaveis_locais
+%type<ast> atribuicao
+%type<ast> chamada_funcao
+%type<ast> lista_argumentos
+%type<ast> argumentos
+%type<ast> argumento
+%type<ast> retorno
+%type<ast> controle_fluxo
+%type<ast> bloco_if_else
+%type<ast> bloco_if
+%type<ast> bloco_else
+%type<ast> bloco_while
+%type<ast> expressao
+%type<ast> term0
+%type<ast> term1
+%type<ast> term2
+%type<ast> term4
+%type<ast> term8
+%type<ast> term10
+%type<ast> term13
+%type<ast> term14
+%type<ast> operando
 
 
 
@@ -130,7 +110,7 @@ programa:
         ;
 
 declaracoes:
-        declaracoes declaracao { $$ = $2; }
+        declaracao declaracoes { if ($1 == NULL) $$ = $2; else { $$ = $1; ast_add_child($1, $2); } }
         | declaracao { $$ = $1; }
         ;
 
@@ -155,11 +135,11 @@ tipo:
         ;
 
 funcao:
-        cabecalho corpo { $$ = $1; if($2 != NULL) { ADICIONAR_FILHO($$, $2); } }
+        cabecalho corpo { $$ = $1; if($2 != NULL) { ast_add_child($$, $2); } }
         ;
 
 cabecalho:
-        '(' lista_parametros ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR { $$ = criar_no($7->val_token) }
+        '(' lista_parametros ')' TK_OC_GE tipo '!' TK_IDENTIFICADOR { $$ = ast_new($7->token_value); }
         ;
 
 lista_parametros:
@@ -181,36 +161,24 @@ corpo:
         ;
 
 bloco_comandos:
-        '{' lista_comandos '}' { $$ = $2; }
-        ;
-
-lista_comandos:
-        comandos ';' { //FALTA ESSA PARTE }
-        | %empty { $$ = NULL; }
+        '{' comandos '}' { $$ = $2; }
+        | '{' '}' { $$ = NULL; }
         ;
 
 comandos:
-        comandos ';' comando { 
-                                if($1 != NULL) 
-                                        { $$ = $1;
-                                                if($3 != NULL)
-                                                {
-                                                        if (!strcmp($1->label, "if"))
-                                                        {
-                                                                ADICIONAR_FILHO($1, $3);
-                                                        }
-                                                        else {
-                                                                no_arvore *last_node = $1;
-                                                                while(last_node->number_of_children == 3) {
-                                                                        last_node = last_node->children[2];
-                                                                }
-                                                                ADICIONAR_FILHO(last_node, $3);
-                                                        }
-                                                }
-                                        } 
-                                       else if($3 != NULL) {$$ = $3;}
+        comando ';' comandos { 
+                                if($1 != NULL) {
+                                    $$ = $1;
+                                    if ($3 != NULL) {
+                                        ast_add_child($1, $3);
+                                    }
+                                } else if($3 != NULL) {
+                                    $$ = $3;
+                                } else {
+                                    $$ = NULL;
                                 }
-        | comando { $$ = $1; }
+                            }
+        | comando ';' { $$ = $1; }
         ;
 
 comando:
@@ -227,11 +195,11 @@ variaveis_locais:
         ;
 
 atribuicao:
-        TK_IDENTIFICADOR '=' expressao { $$ = criar_no("="); ADICIONAR_FILHO($$, criar_no($1->token_value)); ADICIONAR_FILHO($$, $3); }
+        TK_IDENTIFICADOR '=' expressao { $$ = ast_new("="); ast_add_child($$, ast_new($1->token_value)); ast_add_child($$, $3); }
         ;
 
 chamada_funcao:
-        TK_IDENTIFICADOR '(' lista_argumentos ')' { struct no_arvore *_3 = criar_folha($3); struct no_arvore *filhos[1] = {_3}; $$ = criar_no($1, 1, filhos); }
+        TK_IDENTIFICADOR '(' lista_argumentos ')' { char call[] = "call "; $$ = ast_new(strcat(call,$1->token_value)); ast_add_child($$, $3); }
         ;
 
 lista_argumentos:
@@ -240,8 +208,8 @@ lista_argumentos:
         ;
 
 argumentos:
-        argumentos ',' argumento { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1, 1, filhos); }
-        | argumento { $$ = $1; }
+        argumento { $$ = $1; }
+        | argumento ',' argumentos { $$ = $1; ast_add_child($1, $3); } 
         ;
 
 argumento:
@@ -249,7 +217,7 @@ argumento:
         ;
 
 retorno:
-        TK_PR_RETURN expressao { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1, 1, filhos); }
+        TK_PR_RETURN expressao { $$ = ast_new($1->token_value); ast_add_child($$, $2); }
         ;
 
 controle_fluxo:
@@ -258,20 +226,20 @@ controle_fluxo:
         ;
 
 bloco_if_else:
-        bloco_if bloco_else { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1->dados, 1, filhos); }
+        bloco_if bloco_else {  $$ = $1; if($2 != NULL){ ast_add_child($$, $2); } }
         ;
 
 bloco_if:
-        TK_PR_IF '(' expressao ')' bloco_comandos { struct no_arvore *filhos[2] = {$3, $5}; $$ = criar_no($1, 2, filhos); }
+        TK_PR_IF '(' expressao ')' bloco_comandos { $$ = ast_new($1->token_value); ast_add_child($$, $3); if($5 != NULL){ ast_add_child($$, $5); } }
         ;
 
 bloco_else:
-        TK_PR_ELSE bloco_comandos { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1, 1, filhos); }
+        TK_PR_ELSE bloco_comandos { $$ = $2; }
         | %empty { $$ = NULL; }
         ;
 
 bloco_while:
-        TK_PR_WHILE '(' expressao ')' bloco_comandos { struct no_arvore *filhos[2] = {$3, $5}; $$ = criar_no($1, 2, filhos); }
+        TK_PR_WHILE '(' expressao ')' bloco_comandos { $$ = ast_new($1->token_value); ast_add_child($$, $3); ast_add_child($$, $5); }
         ;
 
 expressao:
@@ -279,89 +247,61 @@ expressao:
         ;
 
 term0:
-        term0 TK_OC_OR term1 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term0 TK_OC_OR term1 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term1 { $$ = $1; }
         ;
 
 term1:
-        term1 TK_OC_AND term2 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term1 TK_OC_AND term2 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term2 { $$ = $1; }
         ;
 
 term2:
-        term2 TK_OC_EQ term3 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term3 { $$ = $1; }
-        ;
-
-
-term3:  
-        term3 TK_OC_NE term4 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term2 TK_OC_EQ term4 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term2 TK_OC_NE term4 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term4 { $$ = $1; }
         ;
 
 term4:
-        term4 '<' term5 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term5 { $$ = $1; }
-        ;
-
-term5:  
-        term5 '>' term6 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term6 { $$ = $1; }
-        ;
-
-term6:  
-        term6 TK_OC_LE term7 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term7 { $$ = $1; }
-        ;
-
-term7:  
-        term7 TK_OC_GE term8 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term4 '<' term8 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term4 '>' term8 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term4 TK_OC_LE term8 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term4 TK_OC_GE term8 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term8 { $$ = $1; }
         ;
 
 term8:
-        term8 '+' term9 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term9 { $$ = $1; }
-        ;
-
-term9:  
-        term9 '-' term10 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term8 '+' term10 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term8 '-' term10 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term10 { $$ = $1; }
         ;
 
 
 term10:
-        term10 '*' term11 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term11 { $$ = $1; }
-        ;
-
-term11:  
-        term11 '/' term12 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
-        | term12 { $$ = $1; }
-        ;
-
-term12:  
-        term12 '%' term13 { struct no_arvore *filhos[2] = {$1, $3}; $$ = criar_no($2, 2, filhos); }
+        term10 '*' term13 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term10 '/' term13 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
+        | term10 '%' term13 { $$ = ast_new($2->token_value); ast_add_child($$, $1); ast_add_child($$, $3); }
         | term13 { $$ = $1; }
         ;
 
 term13:  
-        '-' term13 { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1, 1, filhos); }
-        | '!' term13 { struct no_arvore *filhos[1] = {$2}; $$ = criar_no($1, 1, filhos); }
+        '-' term13 { $$ = ast_new($1->token_value); ast_add_child($$, $2); }
+        | '!' term13 { $$ = ast_new($1->token_value); ast_add_child($$, $2); }
         | term14 { $$ = $1; }
         ;
 
 term14:
         '(' expressao ')' { $$ = $2; }
+        | chamada_funcao { $$ = $1; }
         | operando { $$ = $1; }
         ;
 
 operando:
-        TK_IDENTIFICADOR { $$ = criar_folha($1); }
-        | TK_LIT_FALSE { $$ = criar_folha($1); }
-        | TK_LIT_TRUE { $$ = criar_folha($1); }
-        | TK_LIT_INT { $$ = criar_folha($1); }
-        | TK_LIT_FLOAT { $$ = criar_folha($1); }
+        TK_IDENTIFICADOR { $$ = ast_new($1->token_value); }
+        | TK_LIT_FALSE { $$ = ast_new($1->token_value); }
+        | TK_LIT_TRUE { $$ = ast_new($1->token_value); }
+        | TK_LIT_INT { $$ = ast_new($1->token_value); }
+        | TK_LIT_FLOAT { $$ = ast_new($1->token_value); }
         ;
 
 %%
