@@ -54,11 +54,12 @@ void print_table(T_SCOPE_TABLE *table)
     }
 }
 
-int find_symbol(T_SCOPE_TABLE *table, char *symbol)
+T_SCOPE_TABLE_ROW* find_symbol(T_SCOPE_TABLE *table, char *symbol)
 {
     int found = 0;
     int i = 0;
     int rows_number = table->rows_number;
+    T_SCOPE_TABLE_ROW *return_row = NULL;
     
     while(found == 0 && i < rows_number)
     {
@@ -67,18 +68,69 @@ int find_symbol(T_SCOPE_TABLE *table, char *symbol)
         if(strcmp(symbol, row->symbol) == 0)
         {
             found = 1;
-            i -= 1;
+            return_row = row;
         }
 
         i += 1;
     }
 
-    if(found == 1)
+    return return_row;
+}
+
+T_SCOPE_TABLE_STACK* create_stack()
+{
+    T_SCOPE_TABLE_STACK* stack = (T_SCOPE_TABLE_STACK*) calloc(1, sizeof (int));
+    stack->tables_number = 0;
+
+    return stack;
+}
+
+T_SCOPE_TABLE_STACK* add_table(T_SCOPE_TABLE_STACK *stack)
+{
+    if(stack == NULL)
     {
-        return i;
+        stack = create_stack();
     }
-    else
+
+    T_SCOPE_TABLE *new_table = create_table();
+    int tables_number = stack->tables_number + 1;
+    stack = (T_SCOPE_TABLE_STACK*) realloc(stack, sizeof (int) + (sizeof (T_SCOPE_TABLE*))*tables_number);
+    stack->tables_number = tables_number;
+    stack->tables[tables_number - 1] = new_table;
+
+    return stack;
+}
+
+T_SCOPE_TABLE_STACK* pop_table(T_SCOPE_TABLE_STACK *stack)
+{
+    if(stack->tables_number > 0)
     {
-        return -1;
+        int tables_number = stack->tables_number - 1;
+        free(stack->tables[tables_number]);
+        stack = (T_SCOPE_TABLE_STACK*) realloc(stack, sizeof (int) + (sizeof (T_SCOPE_TABLE*))*tables_number);
+        stack->tables_number = tables_number;
     }
+
+    return stack;
+}
+
+T_SCOPE_TABLE_ROW* find_symbol_stack(T_SCOPE_TABLE_STACK *stack, char *symbol)
+{
+    int tables_number = stack->tables_number;
+    int i;
+    T_SCOPE_TABLE_ROW *return_row = NULL;
+    T_SCOPE_TABLE *table;
+
+    for(i = tables_number - 1; i >= 0; i--)
+    {
+        table = stack->tables[i];
+        return_row = find_symbol(table, symbol);
+
+        if(return_row != NULL)
+        {
+            return return_row;
+        }
+    }
+
+    return return_row;
 }

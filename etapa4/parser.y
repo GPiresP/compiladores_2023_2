@@ -15,6 +15,7 @@ JOÃO DAVI M NUNES - 00285639
         void yyerror (char const *mensagem);
         extern int yylineast;
         extern void *arvore;
+        T_SCOPE_TABLE_STACK *table_stack = NULL;
 %}
 
 %code requires {
@@ -108,16 +109,10 @@ JOÃO DAVI M NUNES - 00285639
 %%
 
 programa:
-        declaracoes { 
-                $$ = $1; arvore = (void*) $$;
-                T_SCOPE_TABLE *table = create_table();
-                T_SCOPE_TABLE_ROW *row = create_row(1, $1->label, $1->label, $1->label, $1->label);  
-                table = add_row(table, row);
-                table = add_row(table, row);
-                print_table(table);
-                int a = find_symbol(table, $1->label);
-                printf("RESULTADO DO FIND: %d\n", a);
-                }
+        abrir_escopo declaracoes fechar_escopo 
+        { 
+                $$ = $2; arvore = (void*) $$;
+        }
         | %empty { $$ = NULL; }
         ;
 
@@ -147,7 +142,8 @@ tipo:
         ;
 
 funcao:
-        cabecalho corpo { $$ = $1; if($2 != NULL) { ast_add_child($$, $2); } }
+        abrir_escopo cabecalho corpo fechar_escopo
+        { $$ = $1; if($2 != NULL) { ast_add_child($$, $2); } }
         ;
 
 cabecalho:
@@ -314,6 +310,21 @@ operando:
         | TK_LIT_TRUE { $$ = ast_new($1->token_value); }
         | TK_LIT_INT { $$ = ast_new($1->token_value); }
         | TK_LIT_FLOAT { $$ = ast_new($1->token_value); }
+        ;
+
+abrir_escopo:
+        %empty
+        {
+                table_stack = add_table(table_stack);
+        }
+        ;
+
+fechar_escopo:
+        %empty
+        {
+                printf("NÚMERO DE TABELAS NA PILHA: %d\n", table_stack->tables_number);
+                table_stack = pop_table(table_stack);
+        }
         ;
 
 %%
