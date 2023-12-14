@@ -9,13 +9,16 @@ JOÃO DAVI M NUNES - 00285639
 
 typedef struct ast_node {
     char *label;
+    char *type;
     int number_of_children;
     struct ast_node **children;
 } AST;
 
-AST *ast_new(const char *label);
+AST *ast_new(const char *label, char *type);
 
 void ast_add_child(AST *tree, AST *child);
 void exporta (AST *tree);
+
+char* calc_type(char *type_one, char *type_two);
 
 #endif //AST_HEADER

@@ -19,3 +19,22 @@ VL *vl_new(int line_number, int token_type, char *token_value){
     }
     return valor_lexico;
 }
+
+T_STRING_LIST *create_string_list()
+{
+  T_STRING_LIST *string_List = (T_STRING_LIST*) calloc(1, sizeof (int));
+  string_List->strings_number = 0;
+
+  return string_List;
+}
+
+T_STRING_LIST *add_string(T_STRING_LIST *list, char *string)
+{
+  int strings_number = list->strings_number + 1;
+  list = (T_STRING_LIST*) realloc(list, sizeof (int) + (sizeof (char*))*strings_number);
+  list->strings[strings_number - 1] = string;
+  list->strings_number = strings_number;
+
+  return list;
+}
+

@@ -13,6 +13,15 @@ typedef struct valor_lexico {
     char *token_value;
 } VL;
 
+typedef struct string_list {
+    int strings_number;
+    char *strings[];
+} T_STRING_LIST;
+
 VL *vl_new(int line_number, int token_type, char *token_value);
+
+T_STRING_LIST *create_string_list();
+
+T_STRING_LIST *add_string(T_STRING_LIST *list, char *string);
 
 #endif //VL_HEADER

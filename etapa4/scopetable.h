@@ -8,9 +8,9 @@ JOÃO DAVI M NUNES - 00285639
 #define SCOPE_TABLE_HEADER
 
 typedef struct scope_table_row {
-    int line;
     char *symbol;
-    char *origin;
+    int line;
+    char *nature;
     char *data_type;
     char *data_value;
 } T_SCOPE_TABLE_ROW;
@@ -29,7 +29,7 @@ T_SCOPE_TABLE* create_table();
 
 T_SCOPE_TABLE* add_row(T_SCOPE_TABLE *table, T_SCOPE_TABLE_ROW *row);
 
-T_SCOPE_TABLE_ROW* create_row(int line, char *symbol, char *origin, char *data_type, char *data_value);
+T_SCOPE_TABLE_ROW* create_row(int line, char *symbol, char *nature, char *data_type, char *data_value);
 
 void print_table(T_SCOPE_TABLE *table);
 
@@ -42,5 +42,11 @@ T_SCOPE_TABLE_STACK* add_table(T_SCOPE_TABLE_STACK *stack);
 T_SCOPE_TABLE_STACK* pop_table(T_SCOPE_TABLE_STACK *stack);
 
 T_SCOPE_TABLE_ROW* find_symbol_stack(T_SCOPE_TABLE_STACK *stack, char *symbol);
+
+void print_stack(T_SCOPE_TABLE_STACK *stack);
+
+T_SCOPE_TABLE_ROW* find_value(T_SCOPE_TABLE *table, char *value);
+
+T_SCOPE_TABLE_ROW* find_value_stack(T_SCOPE_TABLE_STACK *stack, char *value);
 
 #endif //SCOPE_TABLE_HEADER
