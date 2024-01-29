@@ -1,0 +1,23 @@
+() >= int ! main {
+	int a;
+	int b;
+	int c;
+
+	a = 5;
+	b = 2;
+	c = !1;
+
+	a = b / c;
+
+	a = b & c;
+	
+	while(b + c - a)
+	{
+		c = a;
+		b = 2 * c;
+	};
+
+	int d;
+
+	d = 1 + a;
+}

@@ -19,6 +19,9 @@ AST *ast_new(const char *label, char *type){
         ret->type = strdup(type);
         ret->number_of_children = 0;
         ret->children = NULL;
+        ret->temp.type = -1;
+        ret->temp.value = -1;
+        ret->code = NULL;
     }
 
     return ret;

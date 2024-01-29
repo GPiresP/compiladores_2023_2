@@ -9,10 +9,20 @@ JOÃO DAVI M NUNES - 00285639
 #include <string.h>
 #include "scopetable.h"
 
+int get_and_increment_var_addr(T_SCOPE_TABLE *table)
+{
+    int curr_val = table->curr_var_addr;
+    
+    table->curr_var_addr += 4;
+    return curr_val;
+};
+
 T_SCOPE_TABLE* create_table()
 {
-    T_SCOPE_TABLE *table = malloc(sizeof (int));
+    T_SCOPE_TABLE *table = malloc(3*sizeof (int));
     table->rows_number = 0;
+    table->is_global = -1;
+    table->curr_var_addr = 0;
 
     // printf("A TABLE HAS BEEN CREATED\n");
     // print_table(table);
@@ -25,7 +35,7 @@ T_SCOPE_TABLE* add_row(T_SCOPE_TABLE *table, T_SCOPE_TABLE_ROW *row)
 {
     table->rows_number = table->rows_number + 1;
     int rows_number = table->rows_number;
-    table = realloc(table, sizeof (int) + ((rows_number)*sizeof (T_SCOPE_TABLE_ROW*)));
+    table = realloc(table, 3*sizeof (int) + ((rows_number)*sizeof (T_SCOPE_TABLE_ROW*)));
     table->rows[rows_number - 1] = row;
 
     // printf("ADDING ROW > TOTAL ROWS: %d\n", table->rows_number);
@@ -33,14 +43,16 @@ T_SCOPE_TABLE* add_row(T_SCOPE_TABLE *table, T_SCOPE_TABLE_ROW *row)
     return table; 
 }
 
-T_SCOPE_TABLE_ROW* create_row(int line, char *symbol, char *nature, char *data_type, char *data_value)
+T_SCOPE_TABLE_ROW* create_row(int line, char *symbol, char *nature, char *data_type, char *data_value, int is_global, int var_addr)
 {
-    T_SCOPE_TABLE_ROW *table_row = calloc(1, sizeof (int) + 3*(sizeof (char*)));
+    T_SCOPE_TABLE_ROW *table_row = calloc(1, sizeof (int)*3 + 4*(sizeof (char*)));
     table_row->line = line;
     table_row->symbol = symbol;
     table_row->nature = nature;
     table_row->data_type = data_type;
     table_row->data_value = data_value;
+    table_row->is_global = is_global;
+    table_row->var_addr = var_addr;
 
     return table_row;
 }
@@ -103,13 +115,17 @@ T_SCOPE_TABLE_STACK* create_stack()
 
 T_SCOPE_TABLE_STACK* add_table(T_SCOPE_TABLE_STACK *stack)
 {
+    int is_global = 0;
+
     if(stack == NULL)
     {
         stack = create_stack();
+        is_global = 1;
     }
 
     T_SCOPE_TABLE *new_table = create_table();
     new_table->rows_number = 0;
+    new_table->is_global = is_global;
     int tables_number = stack->tables_number + 1;
     stack = (T_SCOPE_TABLE_STACK*) realloc(stack, sizeof (int) + (sizeof (T_SCOPE_TABLE*))*tables_number);
     stack->tables_number = tables_number;

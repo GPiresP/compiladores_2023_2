@@ -4,12 +4,16 @@ GABRIEL PIRES E PEIXOTTO - 00326403
 JOÃO DAVI M NUNES - 00285639
 */
 
+#include "iloc.h"
+
 #ifndef AST_HEADER
 #define AST_HEADER
 
 typedef struct ast_node {
     char *label;
     char *type;
+    iloc_arg temp;
+    iloc_code *code;
     int number_of_children;
     struct ast_node **children;
 } AST;

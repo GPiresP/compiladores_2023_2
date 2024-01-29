@@ -125,12 +125,23 @@ programa:
         abrir_escopo declaracoes fechar_escopo 
         { 
                 $$ = $2; arvore = (void*) $$;
+
+                print_code($$->code);
         }
         | %empty { $$ = NULL; }
         ;
 
 declaracoes:
-        declaracao declaracoes { if ($1 == NULL) $$ = $2; else { $$ = $1; ast_add_child($1, $2); } }
+        declaracao declaracoes 
+        { 
+                if ($1 == NULL) $$ = $2;
+                else 
+                {
+                        $$ = $1; 
+                        $$->code = append_code($1->code, $$->code);
+                        ast_add_child($1, $2); 
+                } 
+        }
         | declaracao { $$ = $1; }
         ;
 
@@ -158,8 +169,8 @@ variaveis_globais:
                                 printf("ERROR AT LINE %d. EXITING WITH CODE: %d (VARIABLE ALREADY DECLARED!). VARIABLE NAME: %s.\n", $1->line_number, ERR_DECLARED, string);
                                 exit(ERR_DECLARED); 
                         }
-
-                        T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string);
+                        int addr = get_and_increment_var_addr(stack_top);
+                        T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string, stack_top->is_global, addr);
                         stack_top = add_row(stack_top, row);
                         table_stack->tables[stack_idx] = stack_top;
                 }
@@ -216,6 +227,7 @@ funcao:
                 if($3 != NULL) 
                 { 
                         ast_add_child($$, $3); 
+                        $$->code = $3->code;
                 }
         }
         ;
@@ -239,8 +251,7 @@ cabecalho:
                         printf("ERROR AT LINE %d. EXITING WITH CODE: %d (FUNCTION ALREADY DECLARED!). FUNCTION NAME: %s.\n", $1->line_number, ERR_DECLARED, string);
                         exit(ERR_DECLARED); 
                 }
-
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $5->token_value, string);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $5->token_value, string, stack_top->is_global, -1);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -275,8 +286,8 @@ parametro:
                         printf("ERROR AT LINE %d. EXITING WITH CODE: %d (VARIABLE ALREADY DECLARED!). VARIABLE NAME: %s.\n", $1->line_number, ERR_DECLARED, string);
                         exit(ERR_DECLARED); 
                 }
-
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string);
+                int addr = get_and_increment_var_addr(stack_top);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string, stack_top->is_global, addr);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -288,7 +299,13 @@ corpo:
         ;
 
 bloco_comandos:
-        '{' comandos '}' { $$ = $2; }
+        '{' comandos '}' 
+        { 
+                $$ = $2; 
+
+
+
+        }
         | '{' '}' { $$ = NULL; }
         ;
 
@@ -298,6 +315,8 @@ comandos:
                                     $$ = $1;
                                     if ($3 != NULL) {
                                         ast_add_child($1, $3);
+
+                                        $$->code = append_code($$->code, $3->code);
                                     }
                                 } else if($3 != NULL) {
                                     $$ = $3;
@@ -336,8 +355,8 @@ variaveis_locais:
                                 printf("ERROR AT LINE %d. EXITING WITH CODE: %d (VARIABLE ALREADY DECLARED!). VARIABLE NAME: %s.\n", $1->line_number, ERR_DECLARED, string);
                                 exit(ERR_DECLARED); 
                         }
-
-                        T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string);
+                        int addr = get_and_increment_var_addr(stack_top);
+                        T_SCOPE_TABLE_ROW *row = create_row(line_num, string, nature, $1->token_value, string, stack_top->is_global, addr);
                         stack_top = add_row(stack_top, row);
                         table_stack->tables[stack_idx] = stack_top;
                 }
@@ -370,7 +389,24 @@ atribuicao:
 
                 $$ = ast_new("=", $3->type); 
                 ast_add_child($$, ast_new($1->token_value, row->data_type)); 
-                ast_add_child($$, $3); 
+                ast_add_child($$, $3);
+                
+                iloc_arg rr, addr;
+                rr.type = 1;
+                if(row->is_global){
+                        rr.value = -2;
+                }
+                else{
+                        rr.value = -3;
+                }
+                addr.type = 0;
+                addr.value = row->var_addr;
+
+                $$->temp = $3->temp;
+
+                $$->code = generate_iloc_code(ASG, addr, rr, $3->temp);
+                $$->code = append_code($3->code, $$->code);
+
         }
         ;
 
@@ -431,7 +467,14 @@ controle_fluxo:
         ;
 
 bloco_if_else:
-        bloco_if bloco_else {  $$ = $1; if($2 != NULL){ ast_add_child($$, $2); } }
+        bloco_if bloco_else 
+        {  
+                $$ = $1; 
+                if($2 != NULL)
+                { 
+                        ast_add_child($$, $2); 
+                } 
+        }
         ;
 
 bloco_if:
@@ -439,10 +482,30 @@ bloco_if:
         { 
                 $$ = ast_new($1->token_value, $3->type); 
                 ast_add_child($$, $3); 
+
+                iloc_arg label_b, label_f, label_e;
+                label_b.type = 2;
+                label_f.type = 2;
+                label_e.type = 2;
+                label_b.value = get_label();
+                label_f.value = get_label();
+                label_e.value = get_label();
+
+                iloc_code *label_code_b = generate_1_arg_iloc_code(LBL, label_b);
+                iloc_code *label_code_f = generate_1_arg_iloc_code(LBL, label_f);
+                iloc_code *label_code_e = generate_1_arg_iloc_code(LBL, label_e);
+
+                iloc_code *if_code = generate_iloc_code(IFF, $3->temp, label_b, label_f);
+
+                iloc_code *code = append_code($3->code, if_code);
+                code = append_code(code, label_code_b);
+
                 if($5 != NULL)
                 { 
                         ast_add_child($$, $5); 
-                } 
+                        code = append_code(code, $5->code);
+                }
+                code = append_code(code, label_code_f);
         }
         ;
 
@@ -457,11 +520,38 @@ bloco_while:
                 $$ = ast_new($1->token_value, $3->type); 
                 ast_add_child($$, $3); 
                 ast_add_child($$, $5); 
+
+                iloc_arg label_a, label_b, label_f;
+                label_a.type = 2;
+                label_b.type = 2;
+                label_f.type = 2;
+                label_a.value = get_label();
+                label_b.value = get_label();
+                label_f.value = get_label();
+
+                iloc_code *label_code_a = generate_1_arg_iloc_code(LBL, label_a);
+                iloc_code *label_code_b = generate_1_arg_iloc_code(LBL, label_b);
+                iloc_code *label_code_f = generate_1_arg_iloc_code(LBL, label_f);
+
+                iloc_code *if_code = generate_iloc_code(IFF, $3->temp, label_b, label_f);
+                iloc_code *jmp_code = generate_1_arg_iloc_code(JMP, label_a);
+
+                iloc_code *code = append_code(label_code_a, $3->code);
+                code = append_code(code, if_code);
+                code = append_code(code, label_code_b);
+                code = append_code(code, $5->code);
+                code = append_code(code, jmp_code);
+                code = append_code(code, label_code_f);
+
+                $$->code = code;
         }
         ;
 
 expressao:
-        term0 { $$ = $1; }
+        term0 
+        { 
+                $$ = $1; 
+        }
         ;
 
 term0:
@@ -471,7 +561,13 @@ term0:
                 type = calc_type($1->type, $3->type);
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
-                ast_add_child($$, $3); 
+                ast_add_child($$, $3);
+
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(ORR, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code); 
         }
         | term1 { $$ = $1; }
         ;
@@ -483,7 +579,13 @@ term1:
                 type = calc_type($1->type, $3->type);
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
-                ast_add_child($$, $3); 
+                ast_add_child($$, $3);
+
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(AND, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code); 
         }
         | term2 { $$ = $1; }
         ;
@@ -496,6 +598,12 @@ term2:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(EQU, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term2 TK_OC_NE term4 
         { 
@@ -504,6 +612,12 @@ term2:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(NEQ, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term4 { $$ = $1; }
         ;
@@ -516,6 +630,12 @@ term4:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(LTH, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term4 '>' term8 
         { 
@@ -524,6 +644,12 @@ term4:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(GTH, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term4 TK_OC_LE term8 
         { 
@@ -532,6 +658,12 @@ term4:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(LTE, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term4 TK_OC_GE term8 
         { 
@@ -540,6 +672,12 @@ term4:
                 $$ = ast_new($2->token_value, type);  
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(GTE, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term8 { $$ = $1; }
         ;
@@ -552,6 +690,12 @@ term8:
                 $$ = ast_new($2->token_value, type); 
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(SUM, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term8 '-' term10 
         { 
@@ -560,6 +704,12 @@ term8:
                 $$ = ast_new($2->token_value, type); 
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(SUB, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term10 { $$ = $1; }
         ;
@@ -573,6 +723,12 @@ term10:
                 $$ = ast_new($2->token_value, type); 
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(MUL, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term10 '/' term13 
         { 
@@ -581,6 +737,12 @@ term10:
                 $$ = ast_new($2->token_value, type); 
                 ast_add_child($$, $1); 
                 ast_add_child($$, $3); 
+                
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_code *code = generate_iloc_code(DIV, $1->temp, $3->temp, $$->temp);
+                $$->code = append_code($1->code, $3->code);
+                $$->code = append_code($$->code, code);
         }
         | term10 '%' term13 
         { 
@@ -594,8 +756,26 @@ term10:
         ;
 
 term13:  
-        '-' term13 { $$ = ast_new($1->token_value, $2->type); ast_add_child($$, $2); }
-        | '!' term13 { $$ = ast_new($1->token_value, $2->type); ast_add_child($$, $2); }
+        '-' term13 
+        { 
+                $$ = ast_new($1->token_value, $2->type);
+
+                $$->temp = $2->temp; 
+                iloc_code *new_code = generate_2_arg_iloc_code(NOT, $$->temp, $$->temp);
+                $$->code = append_code($2->code, new_code);
+                
+                ast_add_child($$, $2); 
+        }
+        | '!' term13 
+        {
+                $$ = ast_new($1->token_value, $2->type);
+
+                $$->temp = $2->temp; 
+                iloc_code *new_code = generate_2_arg_iloc_code(NOT, $$->temp, $$->temp);
+                $$->code = append_code($2->code, new_code);
+                
+                ast_add_child($$, $2); 
+        }
         | term14 { $$ = $1; }
         ;
 
@@ -629,6 +809,19 @@ operando:
                 }
 
                 $$ = ast_new($1->token_value, row->data_type); 
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                iloc_arg rr, addr;
+                rr.type = 1;
+                if(row->is_global){
+                        rr.value = -2;
+                }
+                else{
+                        rr.value = -3;
+                }
+                addr.type = 0;
+                addr.value = row->var_addr;
+                $$->code = generate_iloc_code(LOD, addr, rr, $$->temp);
         }
         | TK_LIT_FALSE 
         { 
@@ -670,7 +863,7 @@ operando:
                         strcat(key, new_key);
                 }
 
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string, stack_top->is_global, -1);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -716,7 +909,7 @@ operando:
                         strcat(key, new_key);
                 }
 
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string, stack_top->is_global, -1);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -724,7 +917,14 @@ operando:
         | TK_LIT_INT 
         { 
                 char *type = "int";
-                $$ = ast_new($1->token_value, type); 
+                $$ = ast_new($1->token_value, type);
+
+                iloc_arg arg;
+                arg.type = 0;
+                arg.value = atoi($1->token_value);
+                $$->temp.type = 1;
+                $$->temp.value = get_temp();
+                $$->code = generate_2_arg_iloc_code(INT, arg, $$->temp);
 
                 int line_num = $1->line_number;
                 char *nature = "literal";
@@ -762,7 +962,7 @@ operando:
                         strcat(key, new_key);
                 }
 
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string, stack_top->is_global, -1);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -808,7 +1008,7 @@ operando:
                         strcat(key, new_key);
                 }
 
-                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string);
+                T_SCOPE_TABLE_ROW *row = create_row(line_num, key, nature, type, string, stack_top->is_global, -1);
                 stack_top = add_row(stack_top, row);
                 
                 table_stack->tables[stack_idx] = stack_top;
@@ -829,7 +1029,7 @@ abrir_escopo:
 fechar_escopo:
         %empty
         {
-                print_stack(table_stack);
+                // print_stack(table_stack);
                 // printf("***--***--***\n");
                 // printf("ESCOPO FECHADO\n");
                 // printf("NÚMERO DE TABELAS NA PILHA: %d\n", table_stack->tables_number - 1);
