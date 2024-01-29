@@ -326,7 +326,14 @@ void print_code(iloc_code *code)
                 }else {
                     printf("r%d", code->ops[i]->arg_1.value);
                 }
-                printf(" => r%d, %d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+                if (code->ops[i]->arg_2.value == -2){
+                    printf(" => rbss, ");
+                }else if (code->ops[i]->arg_2.value == -3){
+                    printf(" => rfp, ");
+                }else {
+                    printf(" => r%d, ", code->ops[i]->arg_2.value);
+                }
+                printf("%d", code->ops[i]->arg_3.value);
             } else if (strcmp(code->ops[i]->opcode, "storeAO") == 0) {
                 printf("storeAO ");
                 if (code->ops[i]->arg_1.value == -2){
@@ -484,9 +491,11 @@ void print_code(iloc_code *code)
             }
             /*
             ----->>>> FALTA ESSE DO RÓTULO
-            else if (strcmp(code->ops[i]->opcode, rotulo) == 0) {
-                printf("L%d:", code->ops[i]->arg_1.value);
+           
             */
+            else if (strcmp(code->ops[i]->opcode, "label") == 0) {
+                printf("L%d:", code->ops[i]->arg_1.value);
+            }
             
             printf("\n");
 
