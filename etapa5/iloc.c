@@ -87,16 +87,412 @@ void print_code(iloc_code *code)
     {
         int i, num_ops = code->num_ops;
 
+        /*
         printf("*******************************\n");
         printf("***** PRINTING CODE BLOCK *****\n");
         printf("*******************************\n");
+        */
 
         for(i = 0; i < num_ops; i++)
         {
-            printf("%d:\t%s\t %d %d %d\n", i, code->ops[i]->opcode, code->ops[i]->arg_1.value, code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            if (strcmp(code->ops[i]->opcode, "nop") == 0) {
+                printf("nop");
+            } else if (strcmp(code->ops[i]->opcode, "add") == 0) {
+                printf("add ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "sub") == 0) {
+                printf("sub ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "mult") == 0) {
+                printf("mult ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "div") == 0) {
+                printf("div ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "addI") == 0) {
+                printf("addI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "subI") == 0) {
+                printf("subI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "rsubI") == 0) {
+                printf("rsubI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "multI") == 0) {
+                printf("multI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "divI") == 0) {
+                printf("divI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "rdivI") == 0) {
+                printf("rdivI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "lshift") == 0) {
+                printf("lshift ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "lshiftI") == 0) {
+                printf("lshiftI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "rshift") == 0) {
+                printf("rshift ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "rshiftI") == 0) {
+                printf("rshiftI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "load") == 0) {
+                printf("load ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "loadAI") == 0) {
+                printf("loadAI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "loadA0") == 0) {
+                printf("loadA0 ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cload") == 0) {
+                printf("cload ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "cloadAI") == 0) {
+                printf("cloadAI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", %d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cloadA0") == 0) {
+                printf("cloadA0 ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d => r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "loadI") == 0) {
+                printf("loadI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "store") == 0) {
+                printf("store ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "storeAI") == 0) {
+                printf("storeAI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d, %d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "storeAO") == 0) {
+                printf("storeAO ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d, r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cstore") == 0) {
+                printf("cstore ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "cstoreAI") == 0) {
+                printf("cstoreAI ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d, %d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cstoreAO") == 0) {
+                printf("cstoreAO ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d, r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "i2i") == 0) {
+                printf("i2i ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "c2c") == 0) {
+                printf("c2c ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "c2i") == 0) {
+                printf("c2i ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "i2c") == 0) {
+                printf("i2c ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" => r%d", code->ops[i]->arg_2.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_LT") == 0) {
+                printf("cmp_LT ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_LE") == 0) {
+                printf("cmp_LE ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_EQ") == 0) {
+                printf("cmp_EQ ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_GE") == 0) {
+                printf("cmp_GE ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_GT") == 0) {
+                printf("cmp_GT ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cmp_NE") == 0) {
+                printf("cmp_NE ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(", r%d -> r%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "cbr") == 0) {
+                printf("cbr ");
+                if (code->ops[i]->arg_1.value == -2){
+                    printf("rbss");
+                }else if (code->ops[i]->arg_1.value == -3){
+                    printf("rfp");
+                }else {
+                    printf("r%d", code->ops[i]->arg_1.value);
+                }
+                printf(" -> L%d, L%d", code->ops[i]->arg_2.value, code->ops[i]->arg_3.value);
+            } else if (strcmp(code->ops[i]->opcode, "jumpI") == 0) {
+                printf("jumpI -> L%d", code->ops[i]->arg_1.value);
+            } else if (strcmp(code->ops[i]->opcode, "jump") == 0) {
+                printf("jump -> r%d", code->ops[i]->arg_1.value);
+            }
+            /*
+            ----->>>> FALTA ESSE DO RÓTULO
+            else if (strcmp(code->ops[i]->opcode, rotulo) == 0) {
+                printf("L%d:", code->ops[i]->arg_1.value);
+            */
+            
+            printf("\n");
+
         }
 
-        printf("*******************************\n");
+        // printf("*******************************\n");
     }
 };
 
