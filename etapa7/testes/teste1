@@ -1,0 +1,13 @@
+int abc;
+
+() >= int ! main {
+	int a;
+	int b;
+	int c;
+
+	a = 5;
+	b = 2;
+	c = !1;
+
+	abc = 3;
+}

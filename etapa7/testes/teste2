@@ -1,0 +1,12 @@
+() >= int ! main {
+	int a;
+	a = 2;
+	a = 3;
+	
+	if(a == 2)
+	{a = 3;
+	int b; b = 3;};
+	
+	while(a == 3)
+	{a = 4;};
+}
